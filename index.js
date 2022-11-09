@@ -44,6 +44,33 @@ async function connectDb() {
     const destination = await cursor.toArray();
     res.json(destination);
   });
+
+  app.get('/reviews', async (req, res) => {
+    const cursor = Reviews.find({});
+    const reviews = await cursor.toArray();
+    res.json(reviews);
+  });
+
+  app.get('/reviews/:id', async (req, res) => {
+    const cursor = Reviews.find({ serviceId: req.params?.id }).sort({
+      time: -1,
+    });
+    const review = await cursor.toArray();
+    res.json(review);
+  });
+
+  app.post('/reviews/:id', async (req, res) => {
+    const { id } = req.params;
+    const review = req.body;
+    const filter = { _id: ObjectId(id) };
+    const update = await Destinations.updateOne(filter, {
+      $inc: { reviewCount: 1 },
+    });
+    const result = await Reviews.insertOne(review);
+    console.log(id);
+    console.log(update);
+    res.json(result);
+  });
 }
 
 connectDb().catch((err) => console.log(err));
