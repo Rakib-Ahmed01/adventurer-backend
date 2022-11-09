@@ -33,7 +33,7 @@ async function connectDb() {
   });
 
   app.get('/destinations-for-home', async (_req, res) => {
-    const cursor = Destinations.find({}).sort({ time: -1 }).limit(3);
+    const cursor = Destinations.find({}).sort({ _id: -1 }).limit(3);
     const destinations = await cursor.toArray();
     res.json(destinations);
   });
@@ -43,6 +43,12 @@ async function connectDb() {
     const cursor = Destinations.find({ _id: ObjectId(id) });
     const destination = await cursor.toArray();
     res.json(destination);
+  });
+
+  app.post('/destinations/', async (req, res) => {
+    const destination = req.body;
+    const result = await Destinations.insertOne(destination);
+    res.json(result);
   });
 
   app.get('/reviews', async (req, res) => {
@@ -92,6 +98,14 @@ async function connectDb() {
 
   app.delete('/reviews/:id', async (req, res) => {
     const { id } = req.params;
+    const { serviceId } = req.query;
+    await Destinations.updateOne(
+      { _id: ObjectId(serviceId) },
+      {
+        $inc: { reviewCount: -1 },
+      }
+    );
+    console.log(req.query);
     const result = await Reviews.deleteOne({ _id: ObjectId(id) });
     res.json(result);
   });
