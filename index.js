@@ -46,7 +46,8 @@ async function connectDb() {
   });
 
   app.get('/reviews', async (req, res) => {
-    const cursor = Reviews.find({});
+    const { email } = req.query;
+    const cursor = Reviews.find({ email: email });
     const reviews = await cursor.toArray();
     res.json(reviews);
   });
@@ -69,6 +70,12 @@ async function connectDb() {
     const result = await Reviews.insertOne(review);
     console.log(id);
     console.log(update);
+    res.json(result);
+  });
+
+  app.delete('/reviews/:id', async (req, res) => {
+    const { id } = req.params;
+    const result = await Reviews.deleteOne({ _id: ObjectId(id) });
     res.json(result);
   });
 }
