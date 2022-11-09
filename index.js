@@ -60,6 +60,12 @@ async function connectDb() {
     res.json(review);
   });
 
+  app.get('/update-review/:id', async (req, res) => {
+    const { id } = req.params;
+    const review = await Reviews.findOne({ _id: ObjectId(id) });
+    res.json(review);
+  });
+
   app.post('/reviews/:id', async (req, res) => {
     const { id } = req.params;
     const review = req.body;
@@ -70,6 +76,17 @@ async function connectDb() {
     const result = await Reviews.insertOne(review);
     console.log(id);
     console.log(update);
+    res.json(result);
+  });
+
+  app.patch('/reviews/:id', async (req, res) => {
+    const { id } = req.params;
+    const { text } = req.body;
+    const result = await Reviews.updateOne(
+      { _id: ObjectId(id) },
+      { $set: { reviewText: text } }
+    );
+    console.log(result);
     res.json(result);
   });
 
