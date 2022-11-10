@@ -51,6 +51,12 @@ async function connectDb() {
     res.json(result);
   });
 
+  app.get('/all-reviews', async (req, res) => {
+    const cursor = Reviews.find();
+    const reviews = await cursor.toArray();
+    res.json(reviews);
+  });
+
   app.get('/my-reviews', verifyToken, async (req, res) => {
     const { email } = req.query;
     if (email !== req?.user?.email) {
