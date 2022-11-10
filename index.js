@@ -19,7 +19,7 @@ const client = new MongoClient(uri, {
 });
 
 app.get('/', (_req, res) => {
-  res.send('Home Page');
+  res.send('Welcome to Adventurer!');
 });
 
 async function connectDb() {
@@ -62,12 +62,6 @@ async function connectDb() {
     const cursor = Reviews.find({ email: email }).sort({ time: -1 });
     const reviews = await cursor.toArray();
     res.json({ success: true, reviews });
-  });
-
-  app.get('/all-reviews', async (req, res) => {
-    const cursor = Reviews.find();
-    const reviews = await cursor.toArray();
-    res.json(reviews);
   });
 
   app.get('/reviews/:id', async (req, res) => {
@@ -141,6 +135,20 @@ function verifyToken(req, res, next) {
 }
 
 connectDb().catch((err) => console.log(err));
+
+app.use((req, res, next) => {
+  const error = new Error('404 Page Not Found!');
+  error.status = 404;
+  next(error);
+});
+
+app.use((err, req, res, next) => {
+  if (err?.status) {
+    return res.status(err.status).send(err.message);
+  } else {
+    res.status(500).send('Something Went Wrong!');
+  }
+});
 
 app.listen(port, () => {
   console.log('server is listening on port', +port);
