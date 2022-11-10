@@ -51,9 +51,21 @@ async function connectDb() {
     res.json(result);
   });
 
-  app.get('/reviews', async (req, res) => {
+  app.get('/my-reviews', verifyToken, async (req, res) => {
     const { email } = req.query;
-    const cursor = Reviews.find({ email: email });
+    if (email !== req?.user?.email) {
+      console.log('forbidden');
+      return res
+        .status(403)
+        .json({ success: false, message: 'Forbidden Access!' });
+    }
+    const cursor = Reviews.find({ email: email }).sort({ time: -1 });
+    const reviews = await cursor.toArray();
+    res.json({ success: true, reviews });
+  });
+
+  app.get('/all-reviews', async (req, res) => {
+    const cursor = Reviews.find();
     const reviews = await cursor.toArray();
     res.json(reviews);
   });
@@ -80,9 +92,13 @@ async function connectDb() {
       $inc: { reviewCount: 1 },
     });
     const result = await Reviews.insertOne(review);
-    console.log(id);
-    console.log(update);
     res.json(result);
+  });
+
+  app.post('/login', (req, res) => {
+    const user = req.body;
+    const accessToken = jwt.sign(user, process.env.ACCESS_TOKEN);
+    res.json({ accessToken });
   });
 
   app.patch('/reviews/:id', async (req, res) => {
@@ -92,7 +108,6 @@ async function connectDb() {
       { _id: ObjectId(id) },
       { $set: { reviewText: text } }
     );
-    console.log(result);
     res.json(result);
   });
 
@@ -105,9 +120,23 @@ async function connectDb() {
         $inc: { reviewCount: -1 },
       }
     );
-    console.log(req.query);
     const result = await Reviews.deleteOne({ _id: ObjectId(id) });
     res.json(result);
+  });
+}
+
+function verifyToken(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).json({ success: false, message: 'Unauthorized!' });
+  }
+  const token = authHeader.split(' ')[1];
+  jwt.verify(token, process.env.ACCESS_TOKEN, (err, user) => {
+    if (err) {
+      return res.status(401).json({ success: false, message: 'Unauthorized!' });
+    }
+    req.user = user;
+    next();
   });
 }
 
